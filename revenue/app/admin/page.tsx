@@ -1,33 +1,19 @@
-import { ContentLayout } from "@/components/admin-panel/content-layout";
-import { useAuth, RedirectToSignIn, useUser } from '@clerk/nextjs';
+import Link from 'next/link';
+import {ContentLayout} from '@/components/admin-panel/content-layout';
 
-export default function Page() {
-  const { isLoaded, isSignedIn, user } = useUser();
-
-  if (!isLoaded) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isSignedIn) {
-    return <RedirectToSignIn />;
-  }
-
-  const email = user.emailAddresses[0].emailAddress;
-
-  if (email !== 'admin@revenue.ke') {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-lg text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-700">Admins have access only.</p>
-        </div>
-      </div>
-    );
-  }
-
+export default function Home() {
   return (
-    <ContentLayout title="Test">
-      <div>Test</div>
+    <ContentLayout title="Revenue Dashboard">
+      <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto">
+        <p className="text-lg text-gray-700 mb-4">
+          Your dashboard to manage all aspects of the revenue system. View insights, track payments, and more.
+        </p>
+        <Link href="/admin/dashboard" className="text-blue-600 font-semibold hover:underline hover:text-blue-700 transition">
+        
+            Go to Admin Dashboard
+          
+        </Link>
+      </div>
     </ContentLayout>
   );
 }
