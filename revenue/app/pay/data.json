@@ -1,86 +1,107 @@
 {
-    "municipal_services": [
-      {
-        "service_name": "Water and Sewer",
-        "description": "Supply of clean water and management of wastewater.",
-        "rate": {
-          "base_charge": 2500.00,
-          "per_cubic_meter": 1.50
-        },
-        "unit": "ksh",
-        "billing_period": "monthly"
+  "municipal_services": [
+    {
+      "service_name": "Water and Sewer",
+      "description": "Supply of clean water and management of wastewater.",
+      "rate": {
+        "base_charge": 2500.00,
+        "per_cubic_meter": 1.50
       },
-      {
-        "service_name": "Solid Waste and Recycling Collection",
-        "description": "Garbage, recycling, and compost collection services.",
-        "rate": {
-          "base_charge": 1500.00,
-          "per_additional_bag": 2.00
-        },
-        "unit": "ksh",
-        "billing_period": "monthly"
-      },
-      
-      {
-        "service_name": "Parking",
-        "description": "Access to municipal parking.",
-        "rate": {
-          "single_trip": 250,
-          "monthly_pass": 60.00
-        },
-        "unit": "ksh",
-        "billing_period": "per hour"
-      },
-      {
-        "service_name": "Building Permits and Inspections",
-        "description": "Fees for permits and inspections related to construction and zoning.",
-        "rate": {
-          "base_fee": 10000.00,
-          "per_square_meter": 5.00
-        },
-        "unit": "ksh",
-        "billing_period": "per_application"
-      },
-      {
-        "service_name": "Stormwater Management",
-        "description": "Management of stormwater systems to prevent flooding.",
-        "rate": {
-          "monthly_charge": 800.00
-        },
-        "unit": "ksh",
-        "billing_period": "monthly"
-      },
-      {
-        "service_name": "Recreation and Cultural Programs",
-        "description": "Access to public pools, gyms, libraries, and local events.",
-        "rate": {
-          "membership": 3000.00,
-          "per_event_ticket": 5.00
-        },
-        "unit": "ksh",
-        "billing_period": "monthly_or_per_event"
-      },
-      {
-        "service_name": "Parking Permits",
-        "description": "Permit for resident or visitor parking in designated areas.",
-        "rate": {
-          "resident_permit": 200.00,
-          "visitor_permit": 5.00
-        },
-        "unit": "ksh",
-        "billing_period": "per_month_or_per_day"
-      },
-      {
-        "service_name": "Licenses and Permits",
-        "description": "Fees for business, pet, and alcohol licenses.",
-        "rate": {
-          "business_license": 3150.00,
-          "pet_license": 10.00,
-          "alcohol_permit": 100.00
-        },
-        "unit": "ksh",
-        "billing_period": "annually"
+      "unit": "ksh",
+      "billing_period": "monthly",
+      "input_required": {
+        "field": "cubic_meters",
+        "label": "Water Usage (in cubic meters)"
       }
-    ]
-  }
-  
+    },
+    {
+      "service_name": "Solid Waste and Recycling Collection",
+      "description": "Garbage, recycling, and compost collection services.",
+      "rate": {
+        "base_charge": 1500.00,
+        "per_additional_bag": 2.00
+      },
+      "unit": "ksh",
+      "billing_period": "monthly",
+      "input_required": {
+        "field": "additional_bags",
+        "label": "Number of additional bags"
+      }
+    },
+    {
+      "service_name": "Parking",
+      "description": "Access to municipal parking.",
+      "rate": {
+        "single_trip": {
+          "car": 250,
+          "lorry": 400,
+          "motorcycle": 100
+        },
+        "monthly_pass": {
+          "car": 2000,
+          "lorry": 3000,
+          "motorcycle": 800
+        }
+      },
+      "unit": "ksh",
+      "billing_period": "per_hour",
+      "options": [
+        {
+          "label": "Vehicle Type",
+          "choices": ["car", "lorry", "motorcycle"]
+        },
+        {
+          "label": "Parking Type",
+          "choices": ["single_trip", "monthly_pass"]
+        }
+      ]
+    },
+    {
+      "service_name": "Building Permits and Inspections",
+      "description": "Fees for permits and inspections related to construction and zoning.",
+      "rate": {
+        "base_fee": 10000.00,
+        "per_square_meter": 500.00
+      },
+      "unit": "ksh",
+      "billing_period": "per_application",
+      "input_required": {
+        "field": "square_meters",
+        "label": "Building Area (in square meters)"
+      }
+    },
+    
+    {
+      "service_name": "Recreation and Cultural Programs",
+      "description": "Access to public pools, gyms, libraries, and local events.",
+      "rate": {
+        "membership": 3000.00,
+        "per_event_ticket": 500.00
+      },
+      "unit": "ksh",
+      "billing_period": "monthly_or_per_event",
+      "input_required": {
+        "field": "event_tickets",
+        "label": "Number of Event Tickets"
+       }
+    },
+    
+    {
+    	"service_name":"Licenses and Permits",
+    	"description":"Fees for business, pet, and alcohol licenses.",
+    	"rate":{
+        	"business_license" : 3150.00,
+        	"pet_license" : 1012.00,
+        	"alcohol_permit" : 1000.00
+    	},
+    	"unit":"ksh",
+    	"billing_period":"annually",
+    	"options":[
+        	{
+            	"label":"License Type",
+            	"choices":["business_license","pet_license","alcohol_permit"]
+        	}
+    	]
+    }
+   ]
+}

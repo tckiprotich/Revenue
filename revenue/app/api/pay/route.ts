@@ -1,5 +1,9 @@
 const IntaSend = require('intasend-node');
 import { NextResponse } from "next/server";
+import { EmailTemplate } from '@/components/ui/email';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API);
 
 let intasend = new IntaSend(
     'ISPubKey_test_eda9a8be-bbc9-4f5d-a0ef-54a85960789c',
@@ -8,8 +12,8 @@ let intasend = new IntaSend(
 );
 
 export async function POST(request: Request) {
-    const { first_name, last_name, email, amount } = await request.json();
-    // console.log('Charge request:', { first_name, last_name, email, amount });
+    const { first_name, last_name, email, amount, services } = await request.json();
+    console.log('Charge request:', services);
 
     try {
         const response = await intasend.collection().charge({
@@ -22,7 +26,10 @@ export async function POST(request: Request) {
             api_ref: 'test'
         });
 
-        // console.log(response);
+        // send email
+        await sendEmail(email, first_name, services);
+
+    
 
         return NextResponse.json(response);
 
@@ -35,5 +42,31 @@ export async function POST(request: Request) {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
         });
+    }
+}
+
+
+const sendEmail = async (email: string, first_name: string, services) => {
+    try {
+        const { data, error } = await resend.emails.send({
+            from: 'Revenue <collins@bistretech.com>',
+            to: email,
+            subject: 'Your Receipt',
+            react: EmailTemplate({
+                firstName: first_name,
+                email: email,
+                services: services
+            }),
+        });
+
+        console.log('Email sent:');
+
+        if (error) {
+            return Response.json({ error }, { status: 500 });
+        }
+
+        return Response.json(data);
+    } catch (error) {
+        return Response.json({ error }, { status: 500 });
     }
 }
