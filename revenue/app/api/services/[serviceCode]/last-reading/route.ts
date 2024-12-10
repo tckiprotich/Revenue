@@ -41,17 +41,18 @@ export async function GET(
 
     // Get last payment with details
     const [lastPayment] = await db
-      .select({
-        amount: payments.amount,
-        payment_date: payments.payment_date,
-        status: payments.status,
-        reference: payments.reference,
-        details: payments.details
-      })
-      .from(payments)
-      .where(eq(payments.service_account_id, Number(account.id)))
-      .orderBy(desc(payments.payment_date))
-      .limit(1);
+  .select({
+    id: payments.id, // Add id to selection
+    amount: payments.amount,
+    payment_date: payments.payment_date,
+    status: payments.status,
+    reference: payments.reference,
+    details: payments.details
+  })
+  .from(payments)
+  .where(eq(payments.service_account_id, account.id))
+  .orderBy(desc(payments.payment_date))
+  .limit(1);
 
     let response = {
       amount: lastPayment?.amount || null,
@@ -62,22 +63,22 @@ export async function GET(
     };
 
     // Add water readings if water service
-if (serviceCode === 'WTR' && lastPayment?.id) { // Check if lastPayment and id exist
-  const [reading] = await db
-    .select({
-      current_reading: waterReadings.current_reading,
-      consumption: waterReadings.consumption,
-      reading_date: waterReadings.reading_date
-    })
-    .from(waterReadings)
-    .where(
-      and(
-        eq(waterReadings.service_account_id, account.id), // account.id is already a number
-        eq(waterReadings.payment_id, lastPayment.id) // lastPayment.id is already a number
-      )
-    )
-    .orderBy(desc(waterReadings.reading_date))
-    .limit(1);
+    if (serviceCode === 'WTR' && lastPayment?.id) {
+      const [reading] = await db
+        .select({
+          current_reading: waterReadings.current_reading,
+          consumption: waterReadings.consumption,
+          reading_date: waterReadings.reading_date
+        })
+        .from(waterReadings)
+        .where(
+          and(
+            eq(waterReadings.service_account_id, account.id),
+            eq(waterReadings.payment_id, lastPayment.id)
+          )
+        )
+        .orderBy(desc(waterReadings.reading_date))
+        .limit(1);
 
   if (reading) {
     response = {
