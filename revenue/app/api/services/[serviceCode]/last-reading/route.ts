@@ -1,9 +1,9 @@
 // app/api/services/[serviceCode]/last-reading/route.ts
 import { NextResponse } from 'next/server';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server'
 import { db } from '@/lib/db/drizzle';
-import { serviceAccounts, meterReadings } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { serviceAccounts, meterReadings, payments } from '@/lib/db/schema';
+import { eq, desc, and } from 'drizzle-orm';
 
 export async function GET(
   request: Request,
@@ -18,12 +18,18 @@ export async function GET(
       );
     }
 
-    // Get user's service account
+    // Get user's service account with the specific service code
     const [account] = await db
       .select()
       .from(serviceAccounts)
-      .where(eq(serviceAccounts.service_type, params.serviceCode))
-      .where(eq(serviceAccounts.user_id, userId));
+      .where(
+        and(
+          eq(serviceAccounts.user_id, userId),
+          eq(serviceAccounts.service_type, params.serviceCode)
+        )
+      )
+      .orderBy(desc(serviceAccounts.created_at))
+      .limit(1);
 
     if (!account) {
       return NextResponse.json({ 
@@ -32,11 +38,28 @@ export async function GET(
       });
     }
 
+    // Get last successful payment
+    const [lastPayment] = await db
+      .select({
+        amount: payments.amount
+      })
+      .from(payments)
+      .where(
+        and(
+          eq(payments.service_account_id, account.id),
+          eq(payments.status, 'COMPLETED')
+        )
+      )
+      .orderBy(desc(payments.payment_date))
+      .limit(1);
+
     // Get last meter reading if water service
     let lastReading = null;
     if (params.serviceCode === 'WTR') {
       const [reading] = await db
-        .select()
+        .select({
+          current_reading: meterReadings.current_reading
+        })
         .from(meterReadings)
         .where(eq(meterReadings.service_account_id, account.id))
         .orderBy(desc(meterReadings.reading_date))
@@ -48,7 +71,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: {
-        lastCharge: account.last_charge,
+        lastCharge: lastPayment?.amount || null,
         lastReading
       }
     });
