@@ -2,106 +2,145 @@
   "municipal_services": [
     {
       "service_name": "Water and Sewer",
-      "description": "Supply of clean water and management of wastewater.",
-      "rate": {
-        "base_charge": 2500.00,
-        "per_cubic_meter": 1.50
+      "service_code": "WTR",
+      "description": "Supply of clean water and management of wastewater",
+      "service_type": "metered",
+      "billing_rules": {
+        "domestic": {
+          "0-10": 35,
+          "11-30": 40,
+          "31-60": 50,
+          "above_60": 60
+        },
+        "commercial": {
+          "0-50": 50,
+          "51-100": 60,
+          "above_100": 70
+        }
       },
+      "connection_fee": 2500.00,
       "unit": "ksh",
-      "billing_period": "monthly",
-      "input_required": {
-        "field": "cubic_meters",
-        "label": "Water Usage (in cubic meters)"
-      }
+      "billing_period": "monthly"
     },
     {
-      "service_name": "Solid Waste and Recycling Collection",
-      "description": "Garbage, recycling, and compost collection services.",
-      "rate": {
-        "base_charge": 1500.00,
-        "per_additional_bag": 2.00
+      "service_name": "Business Permits",
+      "service_code": "BIZ",
+      "description": "Annual business operation licenses",
+      "service_type": "annual_permit",
+      "billing_rules": {
+        "small_enterprise": {
+          "base_fee": 5000,
+          "processing_fee": 1000
+        },
+        "medium_enterprise": {
+          "base_fee": 15000,
+          "processing_fee": 2000
+        },
+        "large_enterprise": {
+          "base_fee": 30000,
+          "processing_fee": 3000
+        }
+      },
+      "requirements": [
+        "Business registration",
+        "Tax compliance",
+        "Location approval"
+      ],
+      "unit": "ksh",
+      "billing_period": "yearly"
+    },
+    {
+      "service_name": "Land Rates",
+      "service_code": "LND",
+      "description": "Property and land taxation",
+      "service_type": "property_based",
+      "billing_rules": {
+        "residential": {
+          "rate_percentage": 0.1,
+          "minimum_charge": 2000
+        },
+        "commercial": {
+          "rate_percentage": 0.15,
+          "minimum_charge": 5000
+        },
+        "industrial": {
+          "rate_percentage": 0.2,
+          "minimum_charge": 10000
+        }
+      },
+      "penalties": {
+        "late_payment": 0.02,
+        "default_charge": 5000
       },
       "unit": "ksh",
-      "billing_period": "monthly",
-      "input_required": {
-        "field": "additional_bags",
-        "label": "Number of additional bags"
-      }
+      "billing_period": "yearly"
+    },    
+    {
+      "service_name": "Water and Sewer",
+      "service_code": "WTR",
+      "description": "Supply of clean water and management of wastewater",
+      "service_type": "metered",
+      "billing_rules": {
+        "domestic": {
+          "0-10": 35,
+          "11-30": 40,
+          "31-60": 50,
+          "above_60": 60
+        },
+        "commercial": {
+          "0-50": 50,
+          "51-100": 60,
+          "above_100": 70
+        }
+      },
+      "connection_fee": 2500.00,
+      "unit": "ksh",
+      "billing_period": "monthly"
+    },
+    {
+      "service_name": "Solid Waste Collection",
+      "service_code": "WST",
+      "description": "Garbage, recycling, and compost collection",
+      "service_type": "subscription",
+      "billing_rules": {
+        "residential": {
+          "small_bin": 1500,
+          "medium_bin": 2000,
+          "large_bin": 2500
+        },
+        "commercial": {
+          "small_bin": 3000,
+          "medium_bin": 4000,
+          "large_bin": 5000
+        }
+      },
+      "unit": "ksh",
+      "billing_period": "monthly"
     },
     {
       "service_name": "Parking",
-      "description": "Access to municipal parking.",
-      "rate": {
-        "single_trip": {
+      "service_code": "PRK",
+      "description": "Municipal parking services",
+      "service_type": "time_based",
+      "billing_rules": {
+        "hourly": {
           "car": 250,
           "lorry": 400,
           "motorcycle": 100
         },
-        "monthly_pass": {
-          "car": 2000,
-          "lorry": 3000,
-          "motorcycle": 800
-        }
-      },
-      "unit": "ksh",
-      "billing_period": "per_hour",
-      "options": [
-        {
-          "label": "Vehicle Type",
-          "choices": ["car", "lorry", "motorcycle"]
+        "daily": {
+          "car": 1000,
+          "lorry": 1600,
+          "motorcycle": 400
         },
-        {
-          "label": "Parking Type",
-          "choices": ["single_trip", "monthly_pass"]
+        "monthly": {
+          "car": 15000,
+          "lorry": 25000,
+          "motorcycle": 6000
         }
-      ]
-    },
-    {
-      "service_name": "Building Permits and Inspections",
-      "description": "Fees for permits and inspections related to construction and zoning.",
-      "rate": {
-        "base_fee": 10000.00,
-        "per_square_meter": 500.00
       },
       "unit": "ksh",
-      "billing_period": "per_application",
-      "input_required": {
-        "field": "square_meters",
-        "label": "Building Area (in square meters)"
-      }
-    },
-    
-    {
-      "service_name": "Recreation and Cultural Programs",
-      "description": "Access to public pools, gyms, libraries, and local events.",
-      "rate": {
-        "membership": 3000.00,
-        "per_event_ticket": 500.00
-      },
-      "unit": "ksh",
-      "billing_period": "monthly_or_per_event",
-      "input_required": {
-        "field": "event_tickets",
-        "label": "Number of Event Tickets"
-       }
-    },
-    
-    {
-    	"service_name":"Licenses and Permits",
-    	"description":"Fees for business, pet, and alcohol licenses.",
-    	"rate":{
-        	"business_license" : 3150.00,
-        	"pet_license" : 1012.00,
-        	"alcohol_permit" : 1000.00
-    	},
-    	"unit":"ksh",
-    	"billing_period":"annually",
-    	"options":[
-        	{
-            	"label":"License Type",
-            	"choices":["business_license","pet_license","alcohol_permit"]
-        	}
-    	]
+      "zones": ["CBD", "RESIDENTIAL", "INDUSTRIAL"]
     }
-   ]
+  ]
 }

@@ -12,8 +12,8 @@ let intasend = new IntaSend(
 );
 
 export async function POST(request: Request) {
-    const { first_name, last_name, email, amount, services } = await request.json();
-    console.log('Charge request:', services);
+    const requestBody = await request.json();
+    console.log('Charge request:', requestBody);
 
     try {
         const response = await intasend.collection().charge({
