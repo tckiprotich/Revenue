@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { db } from '@/lib/db/drizzle';
 import { payments, serviceAccounts, services, users, waterReadings } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+// import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 const IntaSend = require('intasend-node');
+import { eq, desc, and } from 'drizzle-orm';
 
 
 const resend = new Resend(process.env.RESEND_API);
@@ -20,8 +21,10 @@ interface PaymentRequest {
   amount: number;
   details: {
     // Water
-    reading?: number;
+    reading?: number;    
     consumption?: number;
+    usageType?: 'domestic' | 'commercial';
+    houseNumber?: string;
     // Business
     businessType?: 'small_enterprise' | 'medium_enterprise' | 'large_enterprise';
     // Land
@@ -59,6 +62,7 @@ export async function POST(request: Request) {
     }
 
     const rawBody = await request.json();
+    console.log('Payment request:', rawBody);
     const body: PaymentRequest = {
       serviceCode: rawBody.serviceCode,
       amount: rawBody.calculatedCost,
@@ -102,14 +106,40 @@ export async function POST(request: Request) {
       .returning();
 
       // Add water readings if water service
-      if (body.serviceCode === 'WTR' && body.details.reading && body.details.consumption) {
+      if (body.serviceCode === 'WTR') {
+        const currentReading = Number(rawBody.reading);
+        // Get last reading to calculate consumption
+        const [lastReading] = await db
+          .select({
+            current_reading: waterReadings.current_reading,
+          })
+          .from(waterReadings)
+          .where(eq(waterReadings.service_account_id, serviceAccount.id))
+          .orderBy(desc(waterReadings.reading_date))
+          .limit(1);
+      
+        const consumption = lastReading 
+          ? currentReading - Number(lastReading.current_reading)
+          : currentReading;
+
+
+          const body: PaymentRequest = {
+            serviceCode: rawBody.serviceCode,
+            amount: rawBody.calculatedCost,
+            details: {
+              reading: Number(rawBody.reading),
+              usageType: rawBody.usageType,
+              houseNumber: rawBody.houseNumber,
+            }
+          };
+      
         await db.insert(waterReadings)
           .values({
-            current_reading: body.details.reading.toString(), // Convert to string for decimal
-            consumption: body.details.consumption.toString(), // Convert to string for decimal
-            service_account_id: serviceAccount.id, // Use the correct field name
+            current_reading: currentReading.toString(),
+            consumption: consumption.toString(),
+            service_account_id: serviceAccount.id,
             payment_id: payment.id,
-            reading_date: new Date()
+            reading_date: new Date(),
           })
           .returning();
       }

@@ -2,6 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { formatCurrency } from './utils';
 
+interface MunicipalService {
+  service_code: string;
+  service_name: string;
+  description: string;
+  billing_period: string;
+  billing_rules: any;
+  requirements?: string[];
+}
+
 interface ServiceCardProps {
   service: MunicipalService;
   onSelect: (service: MunicipalService) => void;
@@ -13,6 +22,12 @@ interface ServiceDetails {
     date: string;
     status: string;
     reference: string | null;
+    units?: number;
+    reading?: {
+      current: number;
+      consumption: number;
+      date: string;
+    };
   } | null;
 }
 
@@ -84,40 +99,68 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onSelect }) => {
 
         {/* Previous Usage Details */}
         {isLoading ? (
-  <div className="animate-pulse space-y-2">
-    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-  </div>
-) : error ? (
-  <p className="text-sm text-red-500">{error}</p>
-) : details?.lastPayment ? (
-  <div className="space-y-2">
-    <p className="text-sm text-gray-700">
-      <span className="font-medium py-2">Last Payment:</span>{' '}
-      <span className="text-green-600 font-semibold">
-        {formatCurrency(parseFloat(details.lastPayment.amount))}
-      </span>
-    </p>
-    <p className="text-sm text-gray-700">
-      <span className="font-medium">Date:</span>{' '}
-      <span>{new Date(details.lastPayment.date).toLocaleDateString()}</span>
-    </p>
-    <p className="text-sm text-gray-700">
-     
-    </p>
-    {details.lastPayment.reference && (
-      <p className="text-sm text-gray-700">
-        <span className="font-medium">Reference:</span>{' '}
-        <span className="font-mono">{details.lastPayment.reference}</span>
-      </p>
-    )}
-  </div>
-) : (
-  <p className="text-sm text-gray-600 italic">No payment history</p>
-)}
+          <div className="animate-pulse space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        ) : error ? (
+          <p className="text-sm text-red-500">{error}</p>
+        ) : details?.lastPayment ? (
+          <div className="space-y-2">
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Last Payment:</span>{' '}
+              <span className="text-green-600 font-semibold">
+                {formatCurrency(parseFloat(details.lastPayment.amount))}
+              </span>
+            </p>
+            <p className="text-sm text-gray-700">
+              {/* <span className="font-medium">Status:</span>{' '} */}
+              {/* <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium
+                ${details.lastPayment.status === 'COMPLETED' 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                {details.lastPayment.status}
+              </span> */}
+            </p>
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Date:</span>{' '}
+              <span>{new Date(details.lastPayment.date).toLocaleDateString()}</span>
+            </p>
+            
+            {details.lastPayment.reference && (
+              <p className="text-sm text-gray-700">
+                <span className="font-medium">Reference:</span>{' '}
+                <span className="font-mono">{details.lastPayment.reference}</span>
+              </p>
+            )}
+
+            {/* Water-specific details */}
+            {service.service_code === 'WTR' && details.lastPayment.reading && (
+              <div className="mt-2 p-3 bg-blue-50 rounded">
+                <div className="space-y-1">
+                  {/* <p className="text-sm text-gray-700">
+                    <span className="font-medium">Current Reading:</span>{' '}
+                    <span className="font-mono">{details.lastPayment.reading.current} m³</span>
+                  </p> */}
+                  <p className="text-sm text-gray-700">
+                    <span className="font-medium">Units Consumption:</span>{' '}
+                    <span className="font-mono">{details.lastPayment.units} m³</span>
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    <span className="font-medium">Reading Date:</span>{' '}
+                    <span>{new Date(details.lastPayment.reading.date).toLocaleDateString()}</span>
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600 italic">No payment history</p>
+        )}
       </div>
 
-      {/* Additional Info */}
+      {/* Additional Info for Business Permits */}
       {service.service_code === 'BIZ' && service.requirements && (
         <div className="mt-4 p-3 bg-blue-50 rounded-md">
           <p className="text-xs font-medium text-blue-800 mb-2">Required Documents:</p>
