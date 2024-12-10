@@ -1,7 +1,7 @@
 // Importing the JSON data
 import data from '@/app/pay/data.json';
 import { getTotalRevenue, getTotalTransactions } from '@/app/pay/savePay';
-import Collections from '@/app/admin/collections/page';
+import Collections from '@/app/api/admin/collections/page';
 
 
 export default function Page() {

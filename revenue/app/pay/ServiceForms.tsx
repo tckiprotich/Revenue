@@ -314,15 +314,15 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSubmit, onCancel }
     e.preventDefault();
     setIsSubmitting(true);
 
-    const paymentData = {
-      ...formData,
-      calculatedCost,
-      serviceCode: service.service_code,
-      serviceName: service.service_name,
-      timestamp: new Date().toISOString()
-    };
-
     try {
+      const paymentData = {
+        ...formData,
+        calculatedCost,
+        serviceCode: service.service_code,
+        serviceName: service.service_name,
+        timestamp: new Date().toISOString()
+      };
+
       const response = await fetch('/api/payments', {
         method: 'POST',
         headers: {
@@ -337,16 +337,24 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSubmit, onCancel }
       }
 
       const result = await response.json();
-      
-      toast.success('Payment processed successfully!', {
-        duration: 5000,
-        position: 'top-center',
-        icon: '✅',
-      });
+      console.log('Payment processed:', result);
+
+      if (result.success && result.data.response.url) {
+        toast.success('Redirecting to payment page...', {
+          duration: 2000,
+          position: 'top-center',
+          icon: '🔄',
+        });
+
+        // Redirect to payment URL
+        window.location.href = result.data.response.url;
+      } else {
+        throw new Error('Payment URL not found in response');
+      }
 
       onSubmit(result);
     } catch (error: any) {
-      toast.error(`Payment failed: ${error.message}`, {
+      toast.error(error.message || 'Payment failed', {
         duration: 5000,
         position: 'top-center',
         icon: '❌',

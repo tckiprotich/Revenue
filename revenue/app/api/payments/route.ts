@@ -5,6 +5,9 @@ import { db } from '@/lib/db/drizzle';
 import { payments, serviceAccounts, bills, users, services, meterReadings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type { User } from '@/lib/db/types';
+import { EmailTemplate } from '@/components/ui/email';
+import { Resend } from 'resend';
+const IntaSend = require('intasend-node');
 
 interface PaymentRequest {
   serviceCode: string;
@@ -31,6 +34,14 @@ interface ServiceValidation {
   isValid: boolean;
   missingFields: string[];
 }
+
+const resend = new Resend(process.env.RESEND_API);
+
+let intasend = new IntaSend(
+  'ISPubKey_test_eda9a8be-bbc9-4f5d-a0ef-54a85960789c',
+  'ISSecretKey_test_62c9506e-2eb1-4432-8639-b3502a14d9a6',
+  true,
+);
 
 export async function POST(request: Request) {
   try {
@@ -134,8 +145,49 @@ export async function POST(request: Request) {
     const processingFee = calculateProcessingFee(body.calculatedCost);
     const totalAmount = body.calculatedCost + processingFee;
 
+    // INTESEND PAYMENT
+    try {
+      const response = await intasend.collection().charge({
+        first_name: user.firstName,
+        last_name: user.lastName,
+        email: user.emailAddresses[0]?.emailAddress,
+        host: 'http://127.0.0.1:3000',
+        amount: totalAmount,
+        currency: 'KES',
+        api_ref: 'transactionId'
+    });
+
+    //send email
+    await sendEmail(user.emailAddresses[0]?.emailAddress, user.firstName<string>, body);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Payment processed successfully',
+      data: {
+        transactionId,
+        response,
+        serviceAccountId,
+        amount: body.calculatedCost,
+        processingFee,
+        totalAmount,
+        status: 'COMPLETED',
+        timestamp: new Date().toISOString()
+      }
+    });
+      
+    } catch (error: any) {
+      const errorMessage = error instanceof Buffer ? error.toString() : error.message;
+      console.error('Charge error:', errorMessage);
+
+      return new NextResponse(JSON.stringify({ error: errorMessage }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+    }
+
     // Get or create service account
-   
+
     if (!serviceAccountId) {
       const [serviceAccount] = await db.insert(serviceAccounts).values({
         user_id: userId,
@@ -148,18 +200,18 @@ export async function POST(request: Request) {
     }
 
     // Create meter reading for water service
-let meterReadingId = null;
-if (body.serviceCode === 'WTR') {
-  const [meterReading] = await db.insert(meterReadings).values({
-    service_account_id: serviceAccountId,
-    previous_reading: 0, // First reading
-    current_reading: parseFloat(body.reading || '0'),
-    consumption: parseFloat(body.reading || '0'), // First reading consumption equals current reading
-    reading_date: new Date(),
-    reading_type: 'actual',
-  }).returning();
-  meterReadingId = meterReading.id;
-}
+    let meterReadingId = null;
+    if (body.serviceCode === 'WTR') {
+      const [meterReading] = await db.insert(meterReadings).values({
+        service_account_id: serviceAccountId,
+        previous_reading: 0, // First reading
+        current_reading: parseFloat(body.reading || '0'),
+        consumption: parseFloat(body.reading || '0'), // First reading consumption equals current reading
+        reading_date: new Date(),
+        reading_type: 'actual',
+      }).returning();
+      meterReadingId = meterReading.id;
+    }
 
     // Create bill record
     const [bill] = await db.insert(bills).values({
@@ -314,4 +366,32 @@ function getServiceSpecificDetails(body: PaymentRequest) {
 function calculateProcessingFee(amount: number): number {
   // 2% processing fee, minimum 50 KSH, maximum 1000 KSH
   return Math.min(Math.max(amount * 0.02, 50), 1000);
+}
+
+
+
+
+const sendEmail = async (email: string, first_name: string, services) => {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'Revenue <collins@bistretech.com>',
+      to: email,
+      subject: 'Your Receipt',
+      react: EmailTemplate({
+        firstName: first_name,
+        email: email,
+        services: services
+      }),
+    });
+
+    console.log('Email sent:');
+
+    if (error) {
+      return Response.json({ error }, { status: 500 });
+    }
+
+    return Response.json(data);
+  } catch (error) {
+    return Response.json({ error }, { status: 500 });
+  }
 }
