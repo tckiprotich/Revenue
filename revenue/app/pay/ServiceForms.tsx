@@ -235,7 +235,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSubmit, onCancel }
 
           {formData.businessType && (
             <div className="bg-gray-50 p-4 rounded-md">
-              <p className="text-sm text-gray-600">Base Fee: 
+              <p className="text-sm text-gray-600">Fee: 
                 {formatCurrency(service.billing_rules[formData.businessType].base_fee)}
               </p>
               <p className="text-sm text-gray-600">Processing Fee: 
@@ -339,18 +339,29 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSubmit, onCancel }
       const result = await response.json();
       console.log('Payment processed:', result);
 
-      if (result.success && result.data.response.url) {
-        toast.success('Redirecting to payment page...', {
-          duration: 2000,
-          position: 'top-center',
-          icon: '🔄',
-        });
+      // ServiceForms.tsx
+if (result.success && result.data.url) {
+  // Show loading toast
+  toast.success('Redirecting to payment page...', {
+    duration: 2000,
+    position: 'top-center',
+    icon: '🔄',
+  });
 
-        // Redirect to payment URL
-        window.location.href = result.data.response.url;
-      } else {
-        throw new Error('Payment URL not found in response');
-      }
+  // Short delay to show toast
+  setTimeout(() => {
+    // Access correct URL path from response
+    window.location.href = result.data.url;
+  }, 1000);
+
+} else {
+  toast.error('Payment link not found', {
+    duration: 3000,
+    position: 'top-center',
+    icon: '❌',
+  });
+  throw new Error('Payment URL not found in response');
+}
 
       onSubmit(result);
     } catch (error: any) {

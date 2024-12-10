@@ -1,27 +1,6 @@
 {
   "municipal_services": [
-    {
-      "service_name": "Water and Sewer",
-      "service_code": "WTR",
-      "description": "Supply of clean water and management of wastewater",
-      "service_type": "metered",
-      "billing_rules": {
-        "domestic": {
-          "0-10": 35,
-          "11-30": 40,
-          "31-60": 50,
-          "above_60": 60
-        },
-        "commercial": {
-          "0-50": 50,
-          "51-100": 60,
-          "above_100": 70
-        }
-      },
-      "connection_fee": 2500.00,
-      "unit": "ksh",
-      "billing_period": "monthly"
-    },
+    
     {
       "service_name": "Business Permits",
       "service_code": "BIZ",

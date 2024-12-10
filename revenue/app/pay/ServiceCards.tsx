@@ -8,8 +8,12 @@ interface ServiceCardProps {
 }
 
 interface ServiceDetails {
-  lastCharge: number | null;
-  lastReading: number | null;
+  lastPayment: {
+    amount: string;
+    date: string;
+    status: string;
+    reference: string | null;
+  } | null;
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ service, onSelect }) => {
@@ -66,7 +70,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onSelect }) => {
           {service.service_code}
         </span>
       </div>
-      
+
       {/* Service Details */}
       <div className="mt-4 space-y-2">
         <p className="text-sm text-gray-700">
@@ -77,33 +81,45 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onSelect }) => {
           <span className="font-medium">Rate:</span>{' '}
           <span>{getRatePreview()}</span>
         </p>
-        
+
         {/* Previous Usage Details */}
         {isLoading ? (
-          <div className="animate-pulse space-y-2">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          </div>
-        ) : error ? (
-          <p className="text-sm text-red-500">{error}</p>
-        ) : details && (
-          <div className="space-y-1">
-            {details.lastCharge !== null && (
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">Last Payment:</span>{' '}
-                <span className="text-green-600 font-semibold">
-                  {formatCurrency(details.lastCharge)}
-                </span>
-              </p>
-            )}
-            {service.service_code === 'WTR' && details.lastReading !== null && (
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">Last Reading:</span>{' '}
-                <span className="font-semibold">{details.lastReading} m³</span>
-              </p>
-            )}
-          </div>
-        )}
+  <div className="animate-pulse space-y-2">
+    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+  </div>
+) : error ? (
+  <p className="text-sm text-red-500">{error}</p>
+) : details?.lastPayment ? (
+  <div className="space-y-2">
+    <p className="text-sm text-gray-700">
+      <span className="font-medium py-2">Last Payment:</span>{' '}
+      <span className="text-green-600 font-semibold">
+        {formatCurrency(parseFloat(details.lastPayment.amount))}
+      </span>
+    </p>
+    <p className="text-sm text-gray-700">
+      <span className="font-medium">Date:</span>{' '}
+      <span>{new Date(details.lastPayment.date).toLocaleDateString()}</span>
+    </p>
+    <p className="text-sm text-gray-700">
+      {/* <span className="font-medium">Status:</span>{' '}
+      <span className={`font-semibold ${
+        details.lastPayment.status === 'COMPLETED' ? 'text-green-600' : 'text-yellow-600'
+      }`}>
+        {details.lastPayment.status}
+      </span> */}
+    </p>
+    {details.lastPayment.reference && (
+      <p className="text-sm text-gray-700">
+        <span className="font-medium">Reference:</span>{' '}
+        <span className="font-mono">{details.lastPayment.reference}</span>
+      </p>
+    )}
+  </div>
+) : (
+  <p className="text-sm text-gray-600 italic">No payment history</p>
+)}
       </div>
 
       {/* Additional Info */}
@@ -130,8 +146,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onSelect }) => {
         {isLoading ? (
           <span className="flex items-center justify-center">
             <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
             Loading...
           </span>
