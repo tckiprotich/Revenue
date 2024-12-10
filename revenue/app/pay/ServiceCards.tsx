@@ -103,12 +103,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onSelect }) => {
       <span>{new Date(details.lastPayment.date).toLocaleDateString()}</span>
     </p>
     <p className="text-sm text-gray-700">
-      {/* <span className="font-medium">Status:</span>{' '}
-      <span className={`font-semibold ${
-        details.lastPayment.status === 'COMPLETED' ? 'text-green-600' : 'text-yellow-600'
-      }`}>
-        {details.lastPayment.status}
-      </span> */}
+     
     </p>
     {details.lastPayment.reference && (
       <p className="text-sm text-gray-700">

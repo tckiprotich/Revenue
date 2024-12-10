@@ -173,6 +173,14 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSubmit, onCancel }
                 onChange={(e) => setFormData({...formData, reading: e.target.value})}
                 required
               />
+              {/* input for house number */}
+              <input 
+                type="text"
+                placeholder="Enter house number"
+                className={inputClassName}
+                onChange={(e) => setFormData({...formData, houseNumber: e.target.value})}
+                required
+              />
             </div>
           </div>
         );

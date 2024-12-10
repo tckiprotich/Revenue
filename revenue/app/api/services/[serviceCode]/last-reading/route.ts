@@ -49,7 +49,7 @@ export async function GET(
         details: payments.details
       })
       .from(payments)
-      .where(eq(payments.service_account_id, account.id))
+      .where(eq(payments.service_account_id, Number(account.id)))
       .orderBy(desc(payments.payment_date))
       .limit(1);
 
@@ -57,35 +57,40 @@ export async function GET(
       amount: lastPayment?.amount || null,
       date: lastPayment?.payment_date || null,
       status: lastPayment?.status || null,
-      reference: lastPayment?.reference || null
+      reference: lastPayment?.reference || null,
+      units: null
     };
 
     // Add water readings if water service
-    if (serviceCode === 'WTR') {
-      const [reading] = await db
-        .select({
-          previous_reading: waterReadings.previous_reading,
-          current_reading: waterReadings.current_reading,
-          consumption: waterReadings.consumption,
-          reading_date: waterReadings.reading_date
-        })
-        .from(waterReadings)
-        .where(eq(waterReadings.service_account_id, account.id))
-        .orderBy(desc(waterReadings.reading_date))
-        .limit(1);
+if (serviceCode === 'WTR' && lastPayment?.id) { // Check if lastPayment and id exist
+  const [reading] = await db
+    .select({
+      current_reading: waterReadings.current_reading,
+      consumption: waterReadings.consumption,
+      reading_date: waterReadings.reading_date
+    })
+    .from(waterReadings)
+    .where(
+      and(
+        eq(waterReadings.service_account_id, account.id), // account.id is already a number
+        eq(waterReadings.payment_id, lastPayment.id) // lastPayment.id is already a number
+      )
+    )
+    .orderBy(desc(waterReadings.reading_date))
+    .limit(1);
 
-      if (reading) {
-        response = {
-          ...response,
-          readings: {
-            previous: reading.previous_reading,
-            current: reading.current_reading,
-            consumption: reading.consumption,
-            date: reading.reading_date
-          }
-        };
+  if (reading) {
+    response = {
+      ...response,
+      units: reading.consumption ? Number(reading.consumption) : null,
+      reading: {
+        current: Number(reading.current_reading),
+        consumption: Number(reading.consumption),
+        date: reading.reading_date
       }
-    }
+    };
+  }
+}
 
     return NextResponse.json({
       success: true,

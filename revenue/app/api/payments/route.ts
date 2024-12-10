@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { db } from '@/lib/db/drizzle';
-import { payments, serviceAccounts, services, users } from '@/lib/db/schema';
+import { payments, serviceAccounts, services, users, waterReadings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 const IntaSend = require('intasend-node');
@@ -63,6 +63,8 @@ export async function POST(request: Request) {
       serviceCode: rawBody.serviceCode,
       amount: rawBody.calculatedCost,
       details: {
+        reading: rawBody.reading,
+        consumption: rawBody.consumption,
         businessType: rawBody.businessType,
       }
     };
@@ -98,6 +100,19 @@ export async function POST(request: Request) {
         reference: transactionId
       })
       .returning();
+
+      // Add water readings if water service
+      if (body.serviceCode === 'WTR' && body.details.reading && body.details.consumption) {
+        await db.insert(waterReadings)
+          .values({
+            current_reading: body.details.reading.toString(), // Convert to string for decimal
+            consumption: body.details.consumption.toString(), // Convert to string for decimal
+            service_account_id: serviceAccount.id, // Use the correct field name
+            payment_id: payment.id,
+            reading_date: new Date()
+          })
+          .returning();
+      }
 
     return NextResponse.json({
       success: true,
