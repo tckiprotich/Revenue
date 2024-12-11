@@ -174,6 +174,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSubmit, onCancel }
                 required
               />
               {/* input for house number */}
+              <label className={labelClassName}>House Number</label>
               <input 
                 type="text"
                 placeholder="Enter house number"
@@ -212,6 +213,17 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSubmit, onCancel }
               required
             />
           </div>
+          {/* title deed */}
+          <div className={groupClassName}>
+            <label className={labelClassName}>Title Deed Number</label>
+            <input 
+              type="text"
+              placeholder="Enter title deed number"
+              className={inputClassName}
+              onChange={(e) => setFormData({...formData, titleDeed: e.target.value})}
+              required
+            />
+            </div>
           
           <div className="col-span-2">
             <p className="text-sm text-gray-600">
@@ -241,6 +253,18 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSubmit, onCancel }
             </select>
           </div>
 
+          {/* Bussines registration number */}
+          <div className={groupClassName}>
+            <label className={labelClassName}>Business Registration Number</label>
+            <input 
+              type="text"
+              placeholder="Enter business registration number"
+              className={inputClassName}
+              onChange={(e) => setFormData({...formData, businessNumber: e.target.value})}
+              required
+            />
+            </div>
+
           {formData.businessType && (
             <div className="bg-gray-50 p-4 rounded-md">
               <p className="text-sm text-gray-600">Fee: 
@@ -252,14 +276,14 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSubmit, onCancel }
             </div>
           )}
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <p className="text-sm font-medium text-gray-700">Required Documents:</p>
             <ul className="list-disc list-inside text-sm text-gray-600">
               {service.requirements?.map((req, index) => (
                 <li key={index}>{req}</li>
               ))}
             </ul>
-          </div>
+          </div> */}
         </div>
       );
 
@@ -292,6 +316,18 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSubmit, onCancel }
               <option value="large_bin">Large Bin</option>
             </select>
           </div>
+
+          {/* bin serial number */}
+          <div className={groupClassName}>
+            <label className={labelClassName}>Bin Serial Number</label>
+            <input 
+              type="text"
+              placeholder="Enter bin serial number"
+              className={inputClassName}
+              onChange={(e) => setFormData({...formData, binSerial: e.target.value})}
+              required
+            />
+            </div>
 
           {formData.customerType && (
             <div className="col-span-2 bg-gray-50 p-4 rounded-md">

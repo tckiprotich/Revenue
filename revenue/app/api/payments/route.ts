@@ -17,7 +17,7 @@ let intasend = new IntaSend(
 );
 
 interface PaymentRequest {
-  serviceCode: string;  // WTR, BIZ, LND, WST, PRK
+  serviceCode: string;
   amount: number;
   details: {
     // Water
@@ -27,12 +27,15 @@ interface PaymentRequest {
     houseNumber?: string;
     // Business
     businessType?: 'small_enterprise' | 'medium_enterprise' | 'large_enterprise';
+    businessNumber?: string; // Add this
     // Land
     propertyType?: 'residential' | 'commercial' | 'industrial';
     propertyValue?: number;
+    titleDeed?: string; // Add this
     // Waste
     binSize?: 'small_bin' | 'medium_bin' | 'large_bin';
     customerType?: 'residential' | 'commercial';
+    binSerial?: string; // Add this
     // Parking
     vehicleType?: 'car' | 'lorry' | 'motorcycle';
     duration?: 'hourly' | 'daily' | 'monthly';
@@ -63,15 +66,25 @@ export async function POST(request: Request) {
 
     const rawBody = await request.json();
     console.log('Payment request:', rawBody);
-    const body: PaymentRequest = {
-      serviceCode: rawBody.serviceCode,
-      amount: rawBody.calculatedCost,
-      details: {
-        reading: rawBody.reading,
-        consumption: rawBody.consumption,
-        businessType: rawBody.businessType,
-      }
-    };
+    
+const body: PaymentRequest = {
+  serviceCode: rawBody.serviceCode,
+  amount: rawBody.calculatedCost,
+  details: {
+    // Water details
+    reading: rawBody.reading,
+    consumption: rawBody.consumption,
+    usageType: rawBody.usageType,
+    houseNumber: rawBody.houseNumber,
+    // Business details
+    businessType: rawBody.businessType,
+    businessNumber: rawBody.businessNumber,
+    // Land details
+    titleDeed: rawBody.titleDeed,
+    // Waste details
+    binSerial: rawBody.binSerial,
+  }
+};
 
     const transactionId = `${body.serviceCode}-${Date.now()}`;
 

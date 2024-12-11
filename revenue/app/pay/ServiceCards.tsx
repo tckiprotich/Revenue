@@ -28,6 +28,20 @@ interface ServiceDetails {
       consumption: number;
       date: string;
     };
+    details?: {
+      // Water
+      houseNumber?: string;
+      usageType?: string;
+      // Business
+      businessType?: string;
+      businessNumber?: string;
+      // Land
+      titleDeed?: string;
+      propertyType?: string;
+      // Waste
+      binSerial?: string;
+      binSize?: string;
+    };
   } | null;
 }
 
@@ -154,6 +168,84 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onSelect }) => {
                 </div>
               </div>
             )}
+
+{details?.lastPayment?.details && (
+  <div className="mt-2 p-3 bg-blue-50 rounded">
+    <div className="space-y-1">
+      {/* Business Permit Details */}
+      {service.service_code === 'BIZ' && (
+        <>
+          {details.lastPayment.details.businessNumber && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Business Number:</span>{' '}
+              <span className="font-mono">{details.lastPayment.details.businessNumber}</span>
+            </p>
+          )}
+          {details.lastPayment.details.businessType && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Business Type:</span>{' '}
+              <span className="capitalize">{details.lastPayment.details.businessType.replace('_', ' ')}</span>
+            </p>
+          )}
+        </>
+      )}
+
+      {/* Land Rate Details */}
+      {service.service_code === 'LND' && (
+        <>
+          {details.lastPayment.details.titleDeed && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Title Deed:</span>{' '}
+              <span className="font-mono">{details.lastPayment.details.titleDeed}</span>
+            </p>
+          )}
+          {details.lastPayment.details.propertyType && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Property Type:</span>{' '}
+              <span className="capitalize">{details.lastPayment.details.propertyType}</span>
+            </p>
+          )}
+        </>
+      )}
+
+      {/* Waste Management Details */}
+      {service.service_code === 'WST' && (
+        <>
+          {details.lastPayment.details.binSerial && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Bin Serial:</span>{' '}
+              <span className="font-mono">{details.lastPayment.details.binSerial}</span>
+            </p>
+          )}
+          {details.lastPayment.details.binSize && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Bin Size:</span>{' '}
+              <span className="capitalize">{details.lastPayment.details.binSize.replace('_', ' ')}</span>
+            </p>
+          )}
+        </>
+      )}
+
+      {/* Water Details */}
+      {service.service_code === 'WTR' && (
+        <>
+          {details.lastPayment.details.houseNumber && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">House Number:</span>{' '}
+              <span className="font-mono">{details.lastPayment.details.houseNumber}</span>
+            </p>
+          )}
+          {details.lastPayment.details.usageType && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Usage Type:</span>{' '}
+              <span className="capitalize">{details.lastPayment.details.usageType}</span>
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  </div>
+)}
           </div>
         ) : (
           <p className="text-sm text-gray-600 italic">No payment history</p>
