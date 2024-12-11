@@ -5,6 +5,7 @@ import { db } from '@/lib/db/drizzle';
 import { payments, serviceAccounts, services, users, waterReadings } from '@/lib/db/schema';
 import { Resend } from 'resend';
 import { eq, desc, and } from 'drizzle-orm';
+import { EmailTemplate } from '@/components/ui/email';
 const IntaSend = require('intasend-node');
 
 const resend = new Resend(process.env.RESEND_API);
@@ -177,6 +178,44 @@ export async function POST(request: Request) {
         })
         .returning();
     }
+
+    // Update email sending section
+try {
+  const emailData: EmailTemplateProps = {
+    firstName: clerkUser.firstName || 'Valued Customer', // Provide fallback
+    email: clerkUser.emailAddresses[0].emailAddress,
+    services: {
+      usageType: body.details.usageType || 'standard',
+      reading: body.details.reading?.toString(),
+      calculatedCost: body.amount,
+      serviceCode: body.serviceCode,
+      serviceName: rawBody.serviceName,
+      timestamp: new Date().toISOString(),
+      details: {
+        // Water
+        houseNumber: body.details.houseNumber,
+        // Business
+        businessType: body.details.businessType,
+        businessNumber: body.details.businessNumber,
+        // Land
+        titleDeed: body.details.titleDeed,
+        propertyType: body.details.propertyType,
+        // Waste
+        binSerial: body.details.binSerial,
+        binSize: body.details.binSize
+      }
+    }
+  };
+
+  const { data, error } = await resend.emails.send({
+    from: 'Revenue System <collins@bistretech.com>',
+    to: [emailData.email],
+    subject: `Payment Confirmation - ${emailData.services.serviceName}`,
+    react: EmailTemplate(emailData)
+  });
+} catch (error) {
+  console.error('Email error:', error);
+}
 
     return NextResponse.json({
       success: true,

@@ -8,6 +8,19 @@ interface ServiceData {
   serviceCode: string;
   serviceName: string;
   timestamp: string;
+  details?: {
+    // Water
+    houseNumber?: string;
+    // Business
+    businessType?: string;
+    businessNumber?: string;
+    // Land
+    titleDeed?: string;
+    propertyType?: string;
+    // Waste
+    binSerial?: string;
+    binSize?: string;
+  };
 }
 
 interface EmailTemplateProps {
@@ -59,12 +72,69 @@ export const EmailTemplate: React.FC<Readonly<EmailTemplateProps>> = ({
           <td style={{ padding: '8px 0', color: '#5f6368' }}>Service:</td>
           <td style={{ padding: '8px 0', fontWeight: 'bold' }}>{services.serviceName}</td>
         </tr>
-        {services.reading && (
-          <tr>
-            <td style={{ padding: '8px 0', color: '#5f6368' }}>Meter Reading:</td>
-            <td style={{ padding: '8px 0' }}>{services.reading} m³</td>
-          </tr>
+
+        {/* Water Service Details */}
+        {services.serviceCode === 'WTR' && (
+          <>
+            <tr>
+              <td style={{ padding: '8px 0', color: '#5f6368' }}>House Number:</td>
+              <td style={{ padding: '8px 0' }}>{services.details?.houseNumber}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '8px 0', color: '#5f6368' }}>Meter Reading:</td>
+              <td style={{ padding: '8px 0' }}>{services.reading} m³</td>
+            </tr>
+          </>
         )}
+
+        {/* Business Permit Details */}
+        {services.serviceCode === 'BIZ' && (
+          <>
+            <tr>
+              <td style={{ padding: '8px 0', color: '#5f6368' }}>Business Number:</td>
+              <td style={{ padding: '8px 0' }}>{services.details?.businessNumber}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '8px 0', color: '#5f6368' }}>Business Type:</td>
+              <td style={{ padding: '8px 0', textTransform: 'capitalize' }}>
+                {services.details?.businessType?.replace('_', ' ')}
+              </td>
+            </tr>
+          </>
+        )}
+
+        {/* Land Rate Details */}
+        {services.serviceCode === 'LND' && (
+          <>
+            <tr>
+              <td style={{ padding: '8px 0', color: '#5f6368' }}>Title Deed:</td>
+              <td style={{ padding: '8px 0' }}>{services.details?.titleDeed}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '8px 0', color: '#5f6368' }}>Property Type:</td>
+              <td style={{ padding: '8px 0', textTransform: 'capitalize' }}>
+                {services.details?.propertyType}
+              </td>
+            </tr>
+          </>
+        )}
+
+        {/* Waste Management Details */}
+        {services.serviceCode === 'WST' && (
+          <>
+            <tr>
+              <td style={{ padding: '8px 0', color: '#5f6368' }}>Bin Serial:</td>
+              <td style={{ padding: '8px 0' }}>{services.details?.binSerial}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '8px 0', color: '#5f6368' }}>Bin Size:</td>
+              <td style={{ padding: '8px 0', textTransform: 'capitalize' }}>
+                {services.details?.binSize?.replace('_', ' ')}
+              </td>
+            </tr>
+          </>
+        )}
+
         <tr>
           <td style={{ padding: '8px 0', color: '#5f6368' }}>Type:</td>
           <td style={{ padding: '8px 0', textTransform: 'capitalize' }}>{services.usageType}</td>
