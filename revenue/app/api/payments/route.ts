@@ -14,6 +14,33 @@ const intasend = new IntaSend(
   'ISSecretKey_test_62c9506e-2eb1-4432-8639-b3502a14d9a6',
   true
 );
+interface ServiceData {
+  usageType: string;
+  reading?: string;
+  calculatedCost: number;
+  serviceCode: string;
+  serviceName: string;
+  timestamp: string;
+  details?: {
+    // Water
+    houseNumber?: string;
+    // Business
+    businessType?: string;
+    businessNumber?: string;
+    // Land
+    titleDeed?: string;
+    propertyType?: string;
+    // Waste
+    binSerial?: string;
+    binSize?: string;
+  };
+}
+
+interface EmailTemplateProps {
+  firstName: string;
+  email: string;
+  services: ServiceData;
+}
 
 interface PaymentRequest {
   serviceCode: string;
