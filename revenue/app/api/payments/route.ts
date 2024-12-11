@@ -3,49 +3,84 @@ import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { db } from '@/lib/db/drizzle';
 import { payments, serviceAccounts, services, users, waterReadings } from '@/lib/db/schema';
-// import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
-const IntaSend = require('intasend-node');
 import { eq, desc, and } from 'drizzle-orm';
-
+const IntaSend = require('intasend-node');
 
 const resend = new Resend(process.env.RESEND_API);
-let intasend = new IntaSend(
-    'ISPubKey_test_eda9a8be-bbc9-4f5d-a0ef-54a85960789c',
-    'ISSecretKey_test_62c9506e-2eb1-4432-8639-b3502a14d9a6',
-    true,
+const intasend = new IntaSend(
+  'ISPubKey_test_eda9a8be-bbc9-4f5d-a0ef-54a85960789c',
+  'ISSecretKey_test_62c9506e-2eb1-4432-8639-b3502a14d9a6',
+  true
 );
 
 interface PaymentRequest {
   serviceCode: string;
   amount: number;
   details: {
-    // Water
     reading?: number;    
     consumption?: number;
     usageType?: 'domestic' | 'commercial';
     houseNumber?: string;
-    // Business
     businessType?: 'small_enterprise' | 'medium_enterprise' | 'large_enterprise';
-    businessNumber?: string; // Add this
-    // Land
+    businessNumber?: string;
     propertyType?: 'residential' | 'commercial' | 'industrial';
     propertyValue?: number;
-    titleDeed?: string; // Add this
-    // Waste
+    titleDeed?: string;
     binSize?: 'small_bin' | 'medium_bin' | 'large_bin';
     customerType?: 'residential' | 'commercial';
-    binSerial?: string; // Add this
-    // Parking
+    binSerial?: string;
     vehicleType?: 'car' | 'lorry' | 'motorcycle';
     duration?: 'hourly' | 'daily' | 'monthly';
     zone?: 'CBD' | 'RESIDENTIAL' | 'INDUSTRIAL';
   };
 }
 
-// route.ts
-// route.ts
-// route.ts
+// Helper function to ensure user exists
+async function ensureUser(userId: string, clerkUser: any) {
+  let [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, userId));
+
+  if (!user) {
+    [user] = await db.insert(users)
+      .values({
+        id: userId,
+        email: clerkUser.emailAddresses[0].emailAddress,
+        name: `${clerkUser.firstName} ${clerkUser.lastName}`,
+        phone: clerkUser.phoneNumbers[0]?.phoneNumber || null
+      })
+      .returning();
+  }
+  return user;
+}
+
+// Helper function to get or create service account
+async function getServiceAccount(userId: string, serviceCode: string, accountNumber: string) {
+  let [serviceAccount] = await db
+    .select()
+    .from(serviceAccounts)
+    .where(
+      and(
+        eq(serviceAccounts.user_id, userId),
+        eq(serviceAccounts.service_type, serviceCode)
+      )
+    );
+
+  if (!serviceAccount) {
+    [serviceAccount] = await db.insert(serviceAccounts)
+      .values({
+        user_id: userId,
+        service_type: serviceCode,
+        account_number: accountNumber,
+        status: 'PENDING'
+      })
+      .returning();
+  }
+  return serviceAccount;
+}
+
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
@@ -64,30 +99,30 @@ export async function POST(request: Request) {
       );
     }
 
+    // Ensure user exists in our database
+    await ensureUser(userId, clerkUser);
+
     const rawBody = await request.json();
     console.log('Payment request:', rawBody);
     
-const body: PaymentRequest = {
-  serviceCode: rawBody.serviceCode,
-  amount: rawBody.calculatedCost,
-  details: {
-    // Water details
-    reading: rawBody.reading,
-    consumption: rawBody.consumption,
-    usageType: rawBody.usageType,
-    houseNumber: rawBody.houseNumber,
-    // Business details
-    businessType: rawBody.businessType,
-    businessNumber: rawBody.businessNumber,
-    // Land details
-    titleDeed: rawBody.titleDeed,
-    // Waste details
-    binSerial: rawBody.binSerial,
-  }
-};
+    const body: PaymentRequest = {
+      serviceCode: rawBody.serviceCode,
+      amount: rawBody.calculatedCost,
+      details: {
+        reading: rawBody.reading,
+        consumption: rawBody.consumption,
+        usageType: rawBody.usageType,
+        houseNumber: rawBody.houseNumber,
+        businessType: rawBody.businessType,
+        businessNumber: rawBody.businessNumber,
+        titleDeed: rawBody.titleDeed,
+        binSerial: rawBody.binSerial,
+      }
+    };
 
     const transactionId = `${body.serviceCode}-${Date.now()}`;
 
+    // Process payment through IntaSend
     const paymentResult = await intasend.collection().charge({
       first_name: clerkUser.firstName,
       last_name: clerkUser.lastName,
@@ -98,15 +133,10 @@ const body: PaymentRequest = {
       api_ref: transactionId
     });
 
-    const [serviceAccount] = await db.insert(serviceAccounts)
-      .values({
-        user_id: userId,
-        service_type: body.serviceCode,
-        account_number: transactionId,
-        status: 'PENDING'
-      })
-      .returning();
+    // Get or create service account
+    const serviceAccount = await getServiceAccount(userId, body.serviceCode, transactionId);
 
+    // Create payment record
     const [payment] = await db.insert(payments)
       .values({
         service_account_id: Number(serviceAccount.id),
@@ -118,44 +148,35 @@ const body: PaymentRequest = {
       })
       .returning();
 
-      // Add water readings if water service
-      if (body.serviceCode === 'WTR') {
-        const currentReading = Number(rawBody.reading);
-        // Get last reading to calculate consumption
-        const [lastReading] = await db
-          .select({
-            current_reading: waterReadings.current_reading,
-          })
-          .from(waterReadings)
-          .where(eq(waterReadings.service_account_id, serviceAccount.id))
-          .orderBy(desc(waterReadings.reading_date))
-          .limit(1);
+    // Handle water service specific logic
+    if (body.serviceCode === 'WTR' && body.details.reading) {
+      const currentReading = Number(body.details.reading);
       
-        const consumption = lastReading 
-          ? currentReading - Number(lastReading.current_reading)
-          : currentReading;
-
-
-          const body: PaymentRequest = {
-            serviceCode: rawBody.serviceCode,
-            amount: rawBody.calculatedCost,
-            details: {
-              reading: Number(rawBody.reading),
-              usageType: rawBody.usageType,
-              houseNumber: rawBody.houseNumber,
-            }
-          };
+      // Get last reading
+      const [lastReading] = await db
+        .select({
+          current_reading: waterReadings.current_reading,
+        })
+        .from(waterReadings)
+        .where(eq(waterReadings.service_account_id, serviceAccount.id))
+        .orderBy(desc(waterReadings.reading_date))
+        .limit(1);
       
-        await db.insert(waterReadings)
-          .values({
-            current_reading: currentReading.toString(),
-            consumption: consumption.toString(),
-            service_account_id: serviceAccount.id,
-            payment_id: payment.id,
-            reading_date: new Date(),
-          })
-          .returning();
-      }
+      const consumption = lastReading 
+        ? currentReading - Number(lastReading.current_reading)
+        : currentReading;
+
+      // Create water reading record
+      await db.insert(waterReadings)
+        .values({
+          current_reading: currentReading.toString(),
+          consumption: consumption.toString(),
+          service_account_id: serviceAccount.id,
+          payment_id: payment.id,
+          reading_date: new Date(),
+        })
+        .returning();
+    }
 
     return NextResponse.json({
       success: true,
